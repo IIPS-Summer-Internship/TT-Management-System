@@ -63,7 +63,7 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="/view-timetable"
+        path="/view-Calender"
         element={
           //<PrivateRoute requiredRoles={["Admin", "Faculty"]}>
             <ViewTable />
