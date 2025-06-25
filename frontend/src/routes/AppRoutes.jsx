@@ -113,6 +113,15 @@ const AppRoutes = () => {
       />
 
       <Route
+        path="/class-timetable"
+        element={
+          //<PrivateRoute requiredRoles={["Admin", "Faculty"]}>
+            <ClassTimeTable />
+          //</PrivateRoute>
+        }
+      />
+
+      <Route
         path="/manage-batches"
         element={
           //<PrivateRoute requiredRoles={["Admin"]}>
