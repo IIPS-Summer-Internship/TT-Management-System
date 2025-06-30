@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { FaEdit } from "react-icons/fa";
+import {generatePdfReport, generateDateRangePdfReport} from "../lib/generatePdfReport.js"
 import {
   ChevronLeft,
   ChevronRight,
@@ -12,7 +13,11 @@ import {
   ArrowLeft,
   Clock,
   MapPin,
+  FileText,
 } from "lucide-react";
+import { DateRange } from 'react-date-range';
+import 'react-date-range/dist/styles.css';
+import 'react-date-range/dist/theme/default.css';
 
 const Spinner = ({ className = "w-12 h-12" }) => (
   <svg
@@ -171,6 +176,20 @@ function ViewTimeTable() {
   const [semesters, setSemesters] = useState([]);
   const [lectures, setLectures] = useState([]);
   const [initialLoading, setInitialLoading] = useState(true);
+
+  // Date states
+  const [showDatePicker, setShowDatePicker] = useState(false);
+const [dateRange, setDateRange] = useState([
+  {
+    startDate: new Date(),
+    endDate: new Date(),
+    key: 'selection'
+  }
+]);
+
+const handleDateRangeChange = (item) => {
+  setDateRange([item.selection]);
+};
 
   const API_BASE_URL = "http://localhost:8080/api/v1";
   const API_ENDPOINTS = {
@@ -540,6 +559,41 @@ function ViewTimeTable() {
     }
   }, []);
 
+  const handleGeneratePdf = useCallback(() => {
+    if (selectedDate && memoizedDayDetails.length > 0) {
+      generatePdfReport(
+        memoizedDayDetails,
+        selectedDate,
+        selectedCourse,
+        selectedFaculty,
+        selectedSemester,
+        memoizedCourses,
+        memoizedFaculties,
+        memoizedSemesters
+      );
+    } else {
+      setError("No data available to generate PDF");
+    }
+  }, [selectedDate, memoizedDayDetails, selectedCourse, selectedFaculty, selectedSemester, memoizedCourses, memoizedFaculties, memoizedSemesters]);
+
+  const handleGenerateDateRangePdf = useCallback(() => {
+  if (dateRange[0].startDate && dateRange[0].endDate) {
+    generateDateRangePdfReport(
+      dateRange[0].startDate,
+      dateRange[0].endDate,
+      selectedCourse,
+      selectedFaculty,
+      selectedSemester,
+      memoizedCourses,
+      memoizedFaculties,
+      memoizedSemesters
+    );
+    setShowDatePicker(false);
+  } else {
+    setError("Please select a valid date range");
+  }
+}, [dateRange, selectedCourse, selectedFaculty, selectedSemester, memoizedCourses, memoizedFaculties, memoizedSemesters]);
+
   const days = useMemo(() => getDaysInMonth(currentDate), [currentDate, getDaysInMonth]);
   const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -635,6 +689,47 @@ function ViewTimeTable() {
                   </>
                 }
               />
+
+              <div className="flex flex-wrap flex-col">
+                <span className="text-sm font-semibold text-gray-600">Date</span>
+  <button
+    onClick={() => setShowDatePicker(!showDatePicker)}
+    className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-700 text-white rounded-lg hover:from-indigo-700 hover:to-purple-800 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2"
+  >
+    <Calendar className="w-4 h-4" />
+    <span>Select Date Range</span>
+  </button>
+  
+</div>
+<div className="flex justify-self-start flex-wrap relative">
+  {showDatePicker && (
+    <div className="absolute z-20 mt-16 bg-white p-4 rounded-lg shadow-xl border border-gray-200 right-0 max-w-[calc(100vw-1rem)] overflow-x-auto">
+      <DateRange
+        editableDateInputs={true}
+        onChange={handleDateRangeChange}
+        moveRangeOnFirstSelection={false}
+        
+        ranges={dateRange}
+      />
+      <div className="flex justify-end mt-4 gap-2">
+        <button
+          onClick={() => setShowDatePicker(false)}
+          className="px-3 py-1 border border-gray-300 rounded text-gray-700 hover:bg-gray-100"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={handleGenerateDateRangePdf}
+          className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          Generate PDF
+        </button>
+      </div>
+    </div>
+  )}
+</div>
+
+  
             </div>
           </div>
 
@@ -691,7 +786,17 @@ function ViewTimeTable() {
                 <h3 className="text-2xl font-bold text-gray-800">
                   <span className="font-normal">{selectedDate.toLocaleDateString("en-US", { weekday: "long" })},</span> {selectedDate.toLocaleDateString("en-US", { month: "long", day: "numeric" })}
                 </h3>
+                <div className="flex items-center gap-4">
+                <button
+      onClick={handleGeneratePdf}
+      disabled={!selectedDate || memoizedDayDetails.length === 0}
+      className="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-700 text-white rounded-lg hover:from-green-700 hover:to-emerald-800 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2 self-end disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      <FileText className="w-4 h-4" />
+      <span>Generate PDF</span>
+    </button>
                 <button onClick={closeModal} className="p-2 hover:bg-gray-200 rounded-full transition-colors"><X className="w-6 h-6 text-gray-600" /></button>
+                </div>
               </div>
             </div>
             <div className="p-6">
