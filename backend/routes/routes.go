@@ -19,6 +19,7 @@ func RegisterRoutes(r *gin.Engine) {
 	// Public routes
 	api.GET("/ping", controllers.Ping)
 	api.POST("/login", controllers.Login)
+	api.POST("/validate/session", controllers.ValidateSession) // session validation API
 
 	// Protected routes (faculty+)
 	api.Use(middleware.JWTAuthMiddleware())
