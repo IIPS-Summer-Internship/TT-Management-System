@@ -19,13 +19,13 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	user, err := utils.AuthenticateUser(input.Username, input.Password)
+	user, err := utils.AuthenticateUser(input.Email, input.PasswordHash)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
-	token, err := utils.GenerateToken(user.Username, user.Role)
+	token, err := utils.GenerateToken(user.Email, user.Role_Name)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not generate token"})
 		return
@@ -42,7 +42,7 @@ func Login(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message":  "Login Successful",
-		"username": user.Username,
+		"username": user.Role_Name,
 		"role":     user.Role,
 	})
 }

@@ -14,7 +14,7 @@ func AuthenticateUser(username, password string) (*models.User, error) {
 		return nil, errors.New("invalid username or password")
 	}
 
-	if user.Password != password {
+	if user.PasswordHash != password {
 		return nil, errors.New("invalid username or password")
 	}
 
