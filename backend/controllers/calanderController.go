@@ -32,28 +32,30 @@ func GetCalendarSummaryByMonth(c *gin.Context) {
 		return
 	}
 
+	// 👇 New: Join Session → Timetable → Lecture
 	query := config.DB.Model(&models.Session{}).
-		Joins("JOIN lectures ON lectures.id = sessions.lecture_id").
+		Joins("JOIN lectures ON lectures.timetable_id = sessions.timetable_id AND lectures.timeslot_id = sessions.timeslot_id").
 		Where("EXTRACT(MONTH FROM sessions.date) = ?", month).
 		Where("EXTRACT(YEAR FROM sessions.date) = ?", year)
 
-	// Optional Filters (faculty_id, course_id, semester)
 	if semester != "" {
-		query = query.Where("lectures.semester = ?", semester)
+		query = query.Joins("JOIN timetables ON timetables.timetable_id = sessions.timetable_id").
+			Where("timetables.semester = ?", semester)
 	}
+
 	if facultyID != "" {
 		query = query.Where("lectures.faculty_id = ?", facultyID)
 	}
+
 	if courseID != "" {
-		query = query.
-			Joins("JOIN batches ON batches.id = lectures.batch_id").
-			Where("batches.course_id = ?", courseID)
+		query = query.Joins("JOIN timetables ON timetables.timetable_id = sessions.timetable_id").
+			Where("timetables.course_id = ?", courseID)
 	}
 
 	var sessions []models.Session
-	err := query.Preload("Lecture").Find(&sessions).Error
+	err := query.Find(&sessions).Error
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetching sessions"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch sessions"})
 		return
 	}
 
@@ -73,11 +75,12 @@ func GetCalendarSummaryByMonth(c *gin.Context) {
 		if summary[key] == nil {
 			summary[key] = &DayStat{}
 		}
-		if s.Status == "held" {
+		switch s.Status {
+		case "held":
 			summary[key].Held++
-		} else if s.Status == "cancelled" {
+		case "cancelled":
 			summary[key].Cancelled++
-		} else if s.Status == "" {
+		default:
 			summary[key].Nil++
 		}
 	}
@@ -123,34 +126,38 @@ func GetLectureDetailsByDate(c *gin.Context) {
 		return
 	}
 
-	lectureIDs := make([]uint, 0, len(sessions))
+	// Now: Fetch lectures by composite key pairs
+	lecturePairs := make([][2]uint, 0, len(sessions))
 	for _, s := range sessions {
-		lectureIDs = append(lectureIDs, s.LectureID)
+		lecturePairs = append(lecturePairs, [2]uint{s.TimetableID, s.TimeslotID})
 	}
 
+	var lectures []models.Lecture
 	lectureQuery := config.DB.
 		Preload("Subject").
 		Preload("Faculty").
 		Preload("Room").
-		Preload("Batch.Course").
-		Where("lectures.id IN ?", lectureIDs)
+		Preload("Batch.Course")
 
-	// Optional Filters (faculty_id, course_id, semester)
+	// No WHERE IN composite, so use explicit filter
+	for _, pair := range lecturePairs {
+		lectureQuery = lectureQuery.Or("timetable_id = ? AND timeslot_id = ?", pair[0], pair[1])
+	}
+
 	if semester != "" {
-		lectureQuery = lectureQuery.Where("lectures.semester = ?", semester)
+		lectureQuery = lectureQuery.Joins("JOIN timetables ON timetables.timetable_id = lectures.timetable_id").
+			Where("timetables.semester = ?", semester)
 	}
 	if facultyID != "" {
 		lectureQuery = lectureQuery.Where("lectures.faculty_id = ?", facultyID)
 	}
 	if courseID != "" {
-		lectureQuery = lectureQuery.
-			Joins("JOIN batches ON batches.id = lectures.batch_id").
-			Where("batches.course_id = ?", courseID)
+		lectureQuery = lectureQuery.Joins("JOIN timetables ON timetables.timetable_id = lectures.timetable_id").
+			Where("timetables.course_id = ?", courseID)
 	}
 
-	var lectures []models.Lecture
 	if err := lectureQuery.Find(&lectures).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch lecture details"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch lectures"})
 		return
 	}
 
@@ -159,30 +166,36 @@ func GetLectureDetailsByDate(c *gin.Context) {
 		return
 	}
 
-	lectureMap := make(map[uint]models.Lecture)
+	// Build lookup
+	type LectureKey struct {
+		TimetableID uint
+		TimeslotID  uint
+	}
+	lectureMap := make(map[LectureKey]models.Lecture)
 	for _, l := range lectures {
-		lectureMap[l.ID] = l
+		lectureMap[LectureKey{l.TimetableID, l.TimeslotID}] = l
 	}
 
 	result := []gin.H{}
 	for _, s := range sessions {
-		lecture, exists := lectureMap[s.LectureID]
-		if !exists {
+		lk := LectureKey{s.TimetableID, s.TimeslotID}
+		lecture, ok := lectureMap[lk]
+		if !ok {
 			continue
 		}
 		result = append(result, gin.H{
-			"lecture_id":    s.LectureID,
+			"timetable_id":  s.TimetableID,
+			"timeslot_id":   s.TimeslotID,
 			"subject":       lecture.Subject.Name,
 			"faculty":       lecture.Faculty.Name,
-			"start_time":    lecture.StartTime,
-			"end_time":      lecture.EndTime,
+			"day_of_week":   lecture.Timeslot.DayOfWeek,
+			"start_time":    lecture.Timeslot.StartTime,
+			"end_time":      lecture.Timeslot.EndTime,
 			"status":        s.Status,
-			"semester":      lecture.Semester,
-			"room":          lecture.Room.Name,
-			"batch_year":    lecture.Batch.Year,
-			"batch_section": lecture.Batch.Section,
-			"course_name":   lecture.Batch.Course.Name,
-			"session_id":   s.ID,
+			"semester":      lecture.Timetable.Semester,
+			"room":          lecture.Room.Room_Name,
+			"course_name":   lecture.Subject.Course.Name,
+			"session_id":    s.SessionID,
 		})
 	}
 
