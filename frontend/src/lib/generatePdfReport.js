@@ -23,10 +23,7 @@ export const generatePdfReport = (
   const doc = new jsPDF();
   
   // Add autoTable to jsPDF instance
-  // This is the key fix for the "autoTable is not a function" error
-  autoTable(doc, {
-    // Your table configuration
-  });
+  autoTable(doc, {});
 
   // Header section
   doc.setFontSize(18);
@@ -64,7 +61,7 @@ export const generatePdfReport = (
   doc.setFontSize(16);
   doc.text("Class Details", 14, 60);
   
-  // Table data
+  // Table data - keep raw status for custom rendering
   const tableData = dayDetails.map((detail) => [
     detail.subject || "N/A",
     detail.faculty || "N/A",
@@ -73,11 +70,7 @@ export const generatePdfReport = (
     detail.semester ? `Semester ${detail.semester}` : "N/A",
     detail.room || "N/A",
     `${detail.course_name || ""} ${detail.batch_year || ""} ${detail.batch_section || ""}`.trim() || "N/A",
-    detail.status === "held"
-      ? "Class Taken"
-      : detail.status === "cancelled"
-      ? "Class Missed"
-      : "No Entry",
+    detail.status || "" // Raw status value for custom rendering
   ]);
   
   // Table headers
@@ -99,22 +92,44 @@ export const generatePdfReport = (
     body: tableData,
     theme: "grid",
     styles: {
-  fontSize: 10,
-  cellPadding: 2,
-  overflow: 'linebreak',
-  halign: 'left',
-},
+      fontSize: 10,
+      cellPadding: 2,
+      overflow: 'linebreak',
+      halign: 'left',
+    },
     headStyles: { fillColor: [52, 73, 94] },
     columnStyles: {
-  0: { cellWidth: 30 }, // Subject
-  1: { cellWidth: 25 }, // Faculty
-  2: { cellWidth: 25 }, // Time
-  3: { cellWidth: 20 }, // Course
-  4: { cellWidth: 20 }, // Semester
-  5: { cellWidth: 15 }, // Room
-  6: { cellWidth: 25 }, // Batch
-  7: { cellWidth: 20 }, // Status
-},
+      0: { cellWidth: 30 }, // Subject
+      1: { cellWidth: 25 }, // Faculty
+      2: { cellWidth: 25 }, // Time
+      3: { cellWidth: 20 }, // Course
+      4: { cellWidth: 20 }, // Semester
+      5: { cellWidth: 15 }, // Room
+      6: { cellWidth: 25 }, // Batch
+      7: { cellWidth: 20 }, // Status
+    },
+    didDrawCell: function(data) {
+      // Custom rendering for status column (index 7)
+      if (data.column.index === 7 && data.cell.section === 'body') {
+        const status = data.cell.raw;
+        const colors = {
+          'held': '#28a745',      // green for Class Taken
+          'cancelled': '#dc3545', // red for Class Missed
+          '': '#6c757d'           // gray for No Entry
+        };
+        const color = colors[status] || '#6c757d';
+        
+        doc.setFillColor(color);
+        doc.rect(
+  data.cell.x,
+  data.cell.y,
+  data.cell.width,
+  data.cell.height,
+  'F'
+);
+
+      }
+    },
     didDrawPage: function (data) {
       // Footer
       doc.setFontSize(10);
@@ -136,8 +151,7 @@ export const generatePdfReport = (
   window.open(pdfUrl, "_blank");
 };
 
-
-// Date Ranged funtion
+// Date Ranged function
 export const generateDateRangePdfReport = async (
   startDate,
   endDate,
@@ -244,7 +258,7 @@ export const generateDateRangePdfReport = async (
     doc.setFontSize(16);
     doc.text("Daily Details", 14, doc.lastAutoTable.finalY + 15);
     
-    // Prepare detailed data
+    // Prepare detailed data with raw status values
     const tableData = data.flatMap(day => {
       return day.details.map(detail => [
         day.date,
@@ -255,11 +269,7 @@ export const generateDateRangePdfReport = async (
         detail.semester ? `Semester ${detail.semester}` : "N/A",
         detail.room || "N/A",
         `${detail.course_name || ""} ${detail.batch_year || ""} ${detail.batch_section || ""}`.trim() || "N/A",
-        detail.status === "held"
-          ? "Class Taken"
-          : detail.status === "cancelled"
-          ? "Class Missed"
-          : "No Entry",
+        detail.status || "" // Raw status value for custom rendering
       ]);
     });
     
@@ -276,7 +286,7 @@ export const generateDateRangePdfReport = async (
       "Status",
     ];
     
-    // Generate table
+    // Generate table with custom status rendering
     autoTable(doc, {
       startY: doc.lastAutoTable.finalY + 20,
       head: [headers],
@@ -299,6 +309,27 @@ export const generateDateRangePdfReport = async (
         6: { cellWidth: 15 }, // Room
         7: { cellWidth: 25 }, // Batch
         8: { cellWidth: 20 }, // Status
+      },
+      didDrawCell: function(data) {
+        // Custom rendering for status column (index 8)
+        if (data.column.index === 8 && data.cell.section === 'body') {
+          const status = data.cell.raw;
+          const colors = {
+            'held': '#28a745',      // green for Class Taken
+            'cancelled': '#dc3545', // red for Class Missed
+            '': '#6c757d'           // gray for No Entry
+          };
+          const color = colors[status] || '#6c757d';
+          
+          doc.setFillColor(color);
+          doc.rect(
+  data.cell.x,
+  data.cell.y,
+  data.cell.width,
+  data.cell.height,
+  'F'
+);
+        }
       },
       didDrawPage: function (data) {
         // Footer
