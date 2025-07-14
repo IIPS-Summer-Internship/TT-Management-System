@@ -2,9 +2,9 @@ package models
 
 type Subject struct {
     SubjectID uint `gorm:"primaryKey"`
-    CourseID  uint
-    Code      string
-    Name      string
+    CourseID  uint	`gorm:"not null"`
+    Code      string	`gorm:"not null"`
+    Name      string	`gorm:"not null"`
 
-    Course Course
+    Course Course	`gorm:"foreignKey:CourseID;references:CourseID"`
 }

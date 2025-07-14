@@ -2,8 +2,8 @@ package models
 
 type Section struct {
     SectionID uint `gorm:"primaryKey"`
-    Name      string
-    BatchID   uint
+    Name      string `gorm:"not null"`
+    BatchID   uint	`gorm:"not null"`
 
-    Batch Batch
+    Batch Batch	`gorm:"foreignKey:BatchID;references:BatchID"`
 }

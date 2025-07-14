@@ -2,8 +2,9 @@ package models
 
 type Faculty struct {
     FacultyID uint `gorm:"primaryKey"`
-    UserID    uint
-    Name string
+    UserID    uint `gorm:"unique;not null"`
+    Name      string `gorm:"not null"`
 
-    User User
+    User User `gorm:"foreignKey:UserID;references:UserID"`
 }
+
