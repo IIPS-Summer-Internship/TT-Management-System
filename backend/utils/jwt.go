@@ -11,15 +11,15 @@ import (
 const TokenExpiry = 24 * 7 * time.Hour
 
 type CustomClaims struct {
-	Username string `json:"username"`
-	Role     string `json:"role"`
+	Email string `json:"email"`
+	Role  string `json:"role"`
 	jwt.RegisteredClaims
 }
 
-func GenerateToken(username, role string) (string, error) {
+func GenerateToken(email, role string) (string, error) {
 	claims := &CustomClaims{
-		Username: username,
-		Role:     role,
+		Email: email,
+		Role:  role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(TokenExpiry)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
