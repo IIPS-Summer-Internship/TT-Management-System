@@ -68,17 +68,17 @@ type Room struct {
 
 type Timetable struct {
 	gorm.Model
-	BatchID   uint    `gorm:"not null"`
-	Batch     Batch   `gorm:"foreignKey:BatchID"`
-	SectionID *uint   // Pointer for nullable foreign key
-	Section   Section `gorm:"foreignKey:SectionID"`
-	CourseID  uint    `gorm:"not null"`
-	Course    Course  `gorm:"foreignKey:CourseID"`
-	RoomID    uint    `gorm:"not null"`
-	Room      Room    `gorm:"foreignKey:RoomID"`
-	Semester  int     `gorm:"not null"`
-	CreatedBy uint    `gorm:"not null"`
-	Creator   User    `gorm:"foreignKey:CreatedBy"`
+	BatchID   uint     `gorm:"not null"`
+	Batch     Batch    `gorm:"foreignKey:BatchID"`
+	SectionID *uint    // Pointer for nullable foreign key
+	Section   *Section `gorm:"foreignKey:SectionID"`
+	CourseID  uint     `gorm:"not null"`
+	Course    Course   `gorm:"foreignKey:CourseID"`
+	RoomID    uint     `gorm:"not null"`
+	Room      Room     `gorm:"foreignKey:RoomID"`
+	Semester  int      `gorm:"not null"`
+	CreatedBy uint     `gorm:"not null"`
+	Creator   User     `gorm:"foreignKey:CreatedBy"`
 	Lectures  []Lecture
 	Sessions  []Session
 }
