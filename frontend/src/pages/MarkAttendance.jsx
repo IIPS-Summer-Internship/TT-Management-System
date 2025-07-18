@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { GiTeacher } from "react-icons/gi";
 import academicData from "../assets/academicData.json";
+import SearchableSelect from "../components/SearchableSelect";
 const Spinner = ({ className = "w-12 h-12" }) => (
   <svg
     className={`animate-spin text-blue-500 ${className}`}
@@ -81,8 +82,8 @@ const StatusBadge = ({ status, onClick, disabled = false }) => {
       onClick={onClick}
       disabled={disabled}
       className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border transition-all duration-200 ${disabled
-          ? 'opacity-50 cursor-not-allowed'
-          : `cursor-pointer hover:scale-105 hover:shadow-md ${config.hoverColor}`
+        ? 'opacity-50 cursor-not-allowed'
+        : `cursor-pointer hover:scale-105 hover:shadow-md ${config.hoverColor}`
         } ${config.bgColor} ${config.textColor} ${config.borderColor}`}
     >
       <Icon className="w-4 h-4" />
@@ -434,6 +435,16 @@ function MarkAttendance() {
     setExpandedSession(expandedSession === sessionId ? null : sessionId);
   };
 
+  const courseOptions = [
+    { value: "all", label: "" },
+    ...courses.map(c => ({ value: c.ID, label: c.Name }))
+  ];
+
+  const facultyOptions = [
+    { value: "all", label: "" },
+    ...faculties.map(f => ({ value: f.ID, label: f.Name }))
+  ];
+
   if (initialLoading) {
     return (
       <div className="min-h-screen flex flex-col justify-center items-center bg-gray-100">
@@ -447,7 +458,7 @@ function MarkAttendance() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-100 p-4 sm:p-6 lg:p-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg p-6 mb-6">
+        <div className="relative z-20 bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg p-6 mb-6">
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
             <div className="flex items-center gap-2 sm:gap-4">
               <h1 className="text-3xl sm:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-800 flex items-center gap-2 sm:gap-3">
@@ -483,16 +494,14 @@ function MarkAttendance() {
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex flex-col">
                 <label className="text-sm font-semibold text-gray-600 mb-1">Course</label>
-                <select
-                  value={selectedCourse}
-                  onChange={(e) => setSelectedCourse(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 bg-white shadow-sm min-w-[160px]"
-                >
-                  <option value="all">All Courses</option>
-                  {courses.map(c => (
-                    <option key={c.ID} value={c.ID}>{c.Name}</option>
-                  ))}
-                </select>
+                <div className="min-w-[160px]">
+                  <SearchableSelect
+                    options={courseOptions}
+                    onSelect={setSelectedCourse}
+                    placeholder="Select Course"
+                    value={selectedCourse}
+                  />
+                </div>
               </div>
 
               <div className="flex flex-col">
@@ -511,16 +520,14 @@ function MarkAttendance() {
 
               <div className="flex flex-col">
                 <label className="text-sm font-semibold text-gray-600 mb-1">Faculty</label>
-                <select
-                  value={selectedFaculty}
-                  onChange={(e) => setSelectedFaculty(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 bg-white shadow-sm min-w-[160px]"
-                >
-                  <option value="all">All Faculties</option>
-                  {faculties.map(f => (
-                    <option key={f.ID} value={f.ID}>{f.Name}</option>
-                  ))}
-                </select>
+                <div className="min-w-[160px]">
+                  <SearchableSelect
+                    options={facultyOptions}
+                    onSelect={setSelectedFaculty}
+                    placeholder="Select Faculty"
+                    value={selectedFaculty}
+                  />
+                </div>
               </div>
             </div>
 
@@ -528,7 +535,7 @@ function MarkAttendance() {
             <div className="flex flex-col sm:flex-row gap-4 flex-1">
               <div className="flex flex-col flex-1">
                 <label className="text-sm font-semibold text-gray-600 mb-1">Search</label>
-                <div className="relative">
+                <div className="relative min-w-[220px]">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <input
                     type="text"
@@ -594,10 +601,10 @@ function MarkAttendance() {
                             {session.subject || 'Subject N/A'}
                           </h3>
                           <div className={`px-2 py-1 rounded-full text-xs font-medium ${timeStatus === 'current'
-                              ? 'bg-green-100 text-green-800'
-                              : timeStatus === 'upcoming'
-                                ? 'bg-blue-100 text-blue-800'
-                                : 'bg-gray-100 text-gray-800'
+                            ? 'bg-green-100 text-green-800'
+                            : timeStatus === 'upcoming'
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'bg-gray-100 text-gray-800'
                             }`}>
                             {timeStatus === 'current' ? 'Ongoing' : timeStatus === 'upcoming' ? 'Upcoming' : 'Completed'}
                           </div>
@@ -610,7 +617,7 @@ function MarkAttendance() {
                             <span>{formatTime(session.start_time)} - {formatTime(session.end_time)}</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <GiTeacher  className="w-4 h-4 text-blue-500" />
+                            <GiTeacher className="w-4 h-4 text-blue-500" />
                             <span>{session.faculty || 'Faculty N/A'}</span>
                           </div>
                           <div className="flex items-center gap-2">

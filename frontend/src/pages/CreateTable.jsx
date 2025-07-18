@@ -2,13 +2,6 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
-import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -18,11 +11,12 @@ import {
 } from "@/components/ui/dialog";
 import { Plus, Edit, Trash2, Save, RefreshCw, Trash } from "lucide-react";
 import academicData from "../assets/academicData.json";
+import SearchableSelect from "@/components/SearchableSelect";
 
 const groupConsecutiveTimeSlots = (gridData, days, timeSlots) => {
   const groupedData = {};
 
-  days.forEach(day => {
+  days.forEach((day) => {
     let currentGroup = null;
 
     timeSlots.forEach((time, timeIndex) => {
@@ -32,8 +26,11 @@ const groupConsecutiveTimeSlots = (gridData, days, timeSlots) => {
       if (lecture) {
         const groupKey = `${day}-${lecture.subject}-${lecture.faculty}`;
 
-        if (currentGroup && currentGroup.groupKey === groupKey &&
-          currentGroup.endIndex === timeIndex - 1) {
+        if (
+          currentGroup &&
+          currentGroup.groupKey === groupKey &&
+          currentGroup.endIndex === timeIndex - 1
+        ) {
           // Continue current group
           currentGroup.timeSlots.push(time);
           currentGroup.endIndex = timeIndex;
@@ -46,7 +43,7 @@ const groupConsecutiveTimeSlots = (gridData, days, timeSlots) => {
             timeSlots: [time],
             startIndex: timeIndex,
             endIndex: timeIndex,
-            isGrouped: true
+            isGrouped: true,
           };
           groupedData[key] = currentGroup;
         }
@@ -63,7 +60,11 @@ const groupConsecutiveTimeSlots = (gridData, days, timeSlots) => {
 const CreateTable = () => {
   const [gridData, setGridData] = useState({});
   const [selectedCell, setSelectedCell] = useState(null);
-  const [dialogData, setDialogData] = useState({ subject: "", code: "", faculty: "" });
+  const [dialogData, setDialogData] = useState({
+    subject: "",
+    code: "",
+    faculty: "",
+  });
   const [showTimetable, setShowTimetable] = useState(false);
   const [batchDetails, setBatchDetails] = useState({
     course: "",
@@ -87,7 +88,10 @@ const CreateTable = () => {
   const [showAddTimeSlotDialog, setShowAddTimeSlotDialog] = useState(false);
   const [newTimeSlot, setNewTimeSlot] = useState("");
   const [editTimeSlotDialog, setEditTimeSlotDialog] = useState(false);
-  const [editingTimeSlot, setEditingTimeSlot] = useState({ index: -1, value: "" });
+  const [editingTimeSlot, setEditingTimeSlot] = useState({
+    index: -1,
+    value: "",
+  });
 
   // New state variables for timetable management
   const [timetableState, setTimetableState] = useState({
@@ -130,8 +134,10 @@ const CreateTable = () => {
   const debugCurrentState = () => {
     console.log('Current State Debug:', {
       batchDetails,
-      selectedBatch: batches.find(batch => batch.Year === batchDetails.batch),
-      selectedCourse: courses.find(course => course.Name === batchDetails.course),
+      selectedBatch: batches.find((batch) => batch.Year === batchDetails.batch),
+      selectedCourse: courses.find(
+        (course) => course.Name === batchDetails.course
+      ),
       semesterNumber: romanToInteger(batchDetails.semester),
       gridDataKeys: Object.keys(gridData),
       timetableState
@@ -149,7 +155,7 @@ const CreateTable = () => {
   }, [batchDetails.course, batchDetails.batch, batchDetails.semester, batches, courses, subjects, faculties]);
 
   useEffect(() => {
-    setTimetableState(prev => ({
+    setTimetableState((prev) => ({
       ...prev,
       gridData: gridData,
       timeSlots: timeSlots
@@ -183,7 +189,7 @@ const CreateTable = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include' // Include credentials for CORS requests
+        credentials: 'include'
       });
 
       if (!response.ok) {
@@ -191,7 +197,6 @@ const CreateTable = () => {
       }
 
       const data = await response.json();
-      // console.log('Courses API Response:', data);   //Commented out for now
       setCourses(data);
     } catch (error) {
       console.error('Error fetching courses:', error);
@@ -213,7 +218,6 @@ const CreateTable = () => {
       }
 
       const data = await response.json();
-      // console.log('Subjects API Response:', data);   //Commented out for now
       setSubjects(data);
     } catch (error) {
       console.error('Error fetching subjects:', error);
@@ -227,7 +231,7 @@ const CreateTable = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include' // Include credentials for CORS requests
+        credentials: 'include'
       });
 
       if (!response.ok) {
@@ -241,7 +245,6 @@ const CreateTable = () => {
     }
   };
 
-  // No Use of this right now But still Implimented as may be needed in future
   const fetchRooms = async () => {
     try {
       const response = await fetch(API_ENDPOINTS.GET_ROOM, {
@@ -249,7 +252,7 @@ const CreateTable = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include' // Include credentials for CORS requests
+        credentials: 'include'
       });
 
       if (!response.ok) {
@@ -270,7 +273,7 @@ const CreateTable = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include' // Include credentials for CORS requests
+        credentials: 'include'
       });
 
       if (!response.ok) {
@@ -278,7 +281,6 @@ const CreateTable = () => {
       }
 
       const data = await response.json();
-      // console.log('Batches API Response Data:', data);  //Commented out for now
       setBatches(data);
     } catch (error) {
       console.error('Error fetching batches:', error);
@@ -290,11 +292,13 @@ const CreateTable = () => {
 
     setIsLoading(true);
     try {
-      const [year, section] = batchDetails.batch.split('-');
-      const selectedBatch = batches.find(batch =>
-        batch.Year === parseInt(year) && batch.Section === section
+      const [year, section] = batchDetails.batch.split("-");
+      const selectedBatch = batches.find(
+        (batch) => batch.Year === parseInt(year) && batch.Section === section
       );
-      const selectedCourse = courses.find(course => course.Name === batchDetails.course);
+      const selectedCourse = courses.find(
+        (course) => course.Name === batchDetails.course
+      );
 
       if (!selectedBatch || !selectedCourse) {
         console.log('Batch or course not found');
@@ -317,13 +321,12 @@ const CreateTable = () => {
 
       if (response.ok) {
         const filteredLectures = await response.json();
-        console.log('Filtered lectures from query API:', filteredLectures);
 
         if (filteredLectures && filteredLectures.length > 0) {
           const reconstructedGridData = {};
           const timeSlotsSet = new Set();
 
-          filteredLectures.forEach(lecture => {
+          filteredLectures.forEach((lecture) => {
             const timeSlot = `${lecture.StartTime}-${lecture.EndTime}`;
             const key = `${lecture.DayOfWeek}-${timeSlot}`;
 
@@ -339,7 +342,7 @@ const CreateTable = () => {
           });
 
           // Include default time slots if they don't exist
-          academicData.timeSlots.forEach(slot => timeSlotsSet.add(slot));
+          academicData.timeSlots.forEach((slot) => timeSlotsSet.add(slot));
 
           const sortedTimeSlots = sortTimeSlots([...timeSlotsSet]);
 
@@ -389,11 +392,13 @@ const CreateTable = () => {
 
     setIsSaving(true);
     try {
-      const [year, section] = batchDetails.batch.split('-');
-      const selectedBatch = batches.find(batch =>
-        batch.Year === parseInt(year) && batch.Section === section
+      const [year, section] = batchDetails.batch.split("-");
+      const selectedBatch = batches.find(
+        (batch) => batch.Year === parseInt(year) && batch.Section === section
       );
-      const selectedCourse = courses.find(course => course.Name === batchDetails.course);
+      const selectedCourse = courses.find(
+        (course) => course.Name === batchDetails.course
+      );
 
       if (!selectedBatch || !selectedCourse) {
         throw new Error('Selected batch or course not found');
@@ -416,14 +421,16 @@ const CreateTable = () => {
       });
 
       if (!getResponse.ok) {
-        throw new Error(`Failed to fetch existing lectures: ${getResponse.status}`);
+        throw new Error(
+          `Failed to fetch existing lectures: ${getResponse.status}`
+        );
       }
 
       const existingLectures = await getResponse.json();
 
       // Create a map of existing lectures by their composite key
       const existingLecturesMap = new Map();
-      existingLectures.forEach(lecture => {
+      existingLectures.forEach((lecture) => {
         const key = `${lecture.DayOfWeek}-${lecture.StartTime}-${lecture.EndTime}`;
         existingLecturesMap.set(key, lecture);
       });
@@ -431,10 +438,10 @@ const CreateTable = () => {
       // Process current grid data
       const lecturesToProcess = Object.entries(timetableState.gridData)
         .map(([key, entry]) => {
-          const [day, startTime, endTime] = key.split('-');
-          const subject = subjects.find(sub => sub.Name === entry.subject);
-          const faculty = faculties.find(fac => fac.Name === entry.faculty);
-          const room = rooms.find(r => r.Name === entry.room);
+          const [day, startTime, endTime] = key.split("-");
+          const subject = subjects.find((sub) => sub.Name === entry.subject);
+          const faculty = faculties.find((fac) => fac.Name === entry.faculty);
+          const room = rooms.find((r) => r.Name === entry.room);
 
           if (!subject || !faculty) return null;
 
@@ -449,11 +456,11 @@ const CreateTable = () => {
               FacultyID: faculty.ID,
               BatchID: selectedBatch.ID,
               Semester: semesterNumber,
-              RoomID: room?.ID || 1
-            }
+              RoomID: room?.ID || 1,
+            },
           };
         })
-        .filter(lecture => lecture !== null);
+        .filter((lecture) => lecture !== null);
 
       // Separate into creates and updates
       const lecturesToUpdate = [];
@@ -464,13 +471,12 @@ const CreateTable = () => {
 
         if (existingLecture) {
           // Check if any fields have changed (including times)
-          const hasChanges = (
+          const hasChanges =
             existingLecture.SubjectID !== data.SubjectID ||
             existingLecture.FacultyID !== data.FacultyID ||
             existingLecture.RoomID !== data.RoomID ||
             existingLecture.StartTime !== data.StartTime ||
-            existingLecture.EndTime !== data.EndTime
-          );
+            existingLecture.EndTime !== data.EndTime;
 
           if (hasChanges) {
             lecturesToUpdate.push({
@@ -488,12 +494,14 @@ const CreateTable = () => {
       });
 
       // Find lectures to delete (exist in DB but not in current grid)
-      const currentKeys = new Set(lecturesToProcess.map(l => l.key));
-      const lecturesToDelete = existingLectures.filter(lecture => {
+      const currentKeys = new Set(lecturesToProcess.map((l) => l.key));
+      const lecturesToDelete = existingLectures.filter((lecture) => {
         const key = `${lecture.DayOfWeek}-${lecture.StartTime}-${lecture.EndTime}`;
 
         // Don't delete if this lecture was updated (has matching ID in updates)
-        const wasUpdated = lecturesToUpdate.some(update => update.ID === lecture.ID);
+        const wasUpdated = lecturesToUpdate.some(
+          (update) => update.ID === lecture.ID
+        );
 
         return !currentKeys.has(key) && !wasUpdated;
       });
@@ -504,19 +512,19 @@ const CreateTable = () => {
 
       // Execute updates first
       if (lecturesToUpdate.length > 0) {
-        const updatePromises = lecturesToUpdate.map(lecture =>
+        const updatePromises = lecturesToUpdate.map((lecture) =>
           fetch(`${API_ENDPOINTS.LECTURE}/${lecture.ID}`, {
-            method: 'PUT',
+            method: "PUT",
             headers: {
-              'Content-Type': 'application/json',
+              "Content-Type": "application/json",
             },
-            credentials: 'include',
-            body: JSON.stringify(lecture)
+            credentials: "include",
+            body: JSON.stringify(lecture),
           })
         );
 
         const updateResponses = await Promise.all(updatePromises);
-        const updateFailed = updateResponses.some(res => !res.ok);
+        const updateFailed = updateResponses.some((res) => !res.ok);
 
         if (updateFailed) {
           const errors = await Promise.all(
@@ -532,72 +540,84 @@ const CreateTable = () => {
               return null;
             })
           );
-          const errorMessages = errors.filter(e => e)
-            .map(e => `Lecture ${e.lectureData.ID}: ${e.message}`)
-            .join('\n');
+          const errorMessages = errors
+            .filter((e) => e)
+            .map((e) => `Lecture ${e.lectureData.ID}: ${e.message}`)
+            .join("\n");
           throw new Error(`Some updates failed:\n${errorMessages}`);
         }
       }
 
       // Execute creates only if there are truly new lectures
       if (lecturesToCreate.length > 0) {
-        const createResponses = await Promise.all(lecturesToCreate.map(lecture =>
-          fetch(API_ENDPOINTS.LECTURE, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify(lecture)
+        const createResponses = await Promise.all(
+          lecturesToCreate.map((lecture) =>
+            fetch(API_ENDPOINTS.LECTURE, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              credentials: "include",
+              body: JSON.stringify(lecture),
+            })
+          )
+        );
+
+        const createErrors = await Promise.all(
+          createResponses.map(async (res, index) => {
+            if (!res.ok) {
+              const error = await res.json().catch(() => ({}));
+              return {
+                status: res.status,
+                message: error.message || res.statusText,
+                lectureData: lecturesToCreate[index],
+              };
+            }
+            return null;
           })
-        ));
+        );
 
-        const createErrors = await Promise.all(createResponses.map(async (res, index) => {
-          if (!res.ok) {
-            const error = await res.json().catch(() => ({}));
-            return {
-              status: res.status,
-              message: error.message || res.statusText,
-              lectureData: lecturesToCreate[index]
-            };
-          }
-          return null;
-        }));
-
-        if (createErrors.some(e => e)) {
-          const errorMessages = createErrors.filter(e => e)
-            .map(e => `Lecture ${JSON.stringify(e.lectureData)}: ${e.message}`)
-            .join('\n');
+        if (createErrors.some((e) => e)) {
+          const errorMessages = createErrors
+            .filter((e) => e)
+            .map(
+              (e) => `Lecture ${JSON.stringify(e.lectureData)}: ${e.message}`
+            )
+            .join("\n");
           throw new Error(`Some creates failed:\n${errorMessages}`);
         }
       }
 
       // Execute deletes last (only for lectures that weren't updated)
       if (lecturesToDelete.length > 0) {
-        const deleteResponses = await Promise.all(lecturesToDelete.map(lecture =>
-          fetch(`${API_ENDPOINTS.LECTURE}/${lecture.ID}`, {
-            method: 'DELETE',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include'
+        const deleteResponses = await Promise.all(
+          lecturesToDelete.map((lecture) =>
+            fetch(`${API_ENDPOINTS.LECTURE}/${lecture.ID}`, {
+              method: "DELETE",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              credentials: "include",
+            })
+          )
+        );
+
+        const deleteErrors = await Promise.all(
+          deleteResponses.map(async (res, index) => {
+            if (!res.ok) {
+              const error = await res.json().catch(() => ({}));
+              return {
+                status: res.status,
+                message: error.message || res.statusText,
+                lectureData: lecturesToDelete[index],
+              };
+            }
+            return null;
           })
-        ));
+        );
 
-        const deleteErrors = await Promise.all(deleteResponses.map(async (res, index) => {
-          if (!res.ok) {
-            const error = await res.json().catch(() => ({}));
-            return {
-              status: res.status,
-              message: error.message || res.statusText,
-              lectureData: lecturesToDelete[index]
-            };
-          }
-          return null;
-        }));
-
-        if (deleteErrors.some(e => e)) {
-          console.warn('Some deletes failed:', deleteErrors.filter(e => e));
+        if (deleteErrors.some((e) => e)) {
+          console.warn("Some deletes failed:", deleteErrors.filter((e) => e));
         }
       }
 
@@ -606,18 +626,20 @@ const CreateTable = () => {
 
       // Show success message
       const messageParts = [];
-      if (lecturesToCreate.length) messageParts.push(`${lecturesToCreate.length} created`);
-      if (lecturesToUpdate.length) messageParts.push(`${lecturesToUpdate.length} updated`);
-      if (lecturesToDelete.length) messageParts.push(`${lecturesToDelete.length} deleted`);
+      if (lecturesToCreate.length)
+        messageParts.push(`${lecturesToCreate.length} created`);
+      if (lecturesToUpdate.length)
+        messageParts.push(`${lecturesToUpdate.length} updated`);
+      if (lecturesToDelete.length)
+        messageParts.push(`${lecturesToDelete.length} deleted`);
 
       const message = messageParts.length
-        ? `Timetable saved successfully! (${messageParts.join(', ')})`
-        : 'No changes detected';
+        ? `Timetable saved successfully! (${messageParts.join(", ")})`
+        : "No changes detected";
 
       alert(message);
-
     } catch (error) {
-      console.error('Error saving lectures:', error);
+      console.error("Error saving lectures:", error);
       alert(`Failed to save timetable: ${error.message}`);
     } finally {
       setIsSaving(false);
@@ -626,11 +648,13 @@ const CreateTable = () => {
 
   const getFilteredBatches = () => {
     if (!batchDetails.course) return batches;
-    const selectedCourse = courses.find(course => course.Name === batchDetails.course);
+    const selectedCourse = courses.find(
+      (course) => course.Name === batchDetails.course
+    );
     if (!selectedCourse) return [];
 
     return batches
-      .filter(batch => batch.CourseID === selectedCourse.ID)
+      .filter((batch) => batch.CourseID === selectedCourse.ID)
       .sort((a, b) => {
         if (a.Year !== b.Year) return a.Year - b.Year;
         return a.Section.localeCompare(b.Section);
@@ -639,18 +663,18 @@ const CreateTable = () => {
 
   const getFilteredSemesters = () => {
     if (!batchDetails.course && !batchDetails.batch) return semesters;
-    return semesters.filter(semester => true);
+    return semesters.filter((semester) => true);
   };
 
   const parseTimeToMinutes = (timeStr) => {
-    const [hours, minutes] = timeStr.split(':').map(Number);
+    const [hours, minutes] = timeStr.split(":").map(Number);
     return hours * 60 + minutes;
   };
 
   const sortTimeSlots = (slots) => {
     return slots.sort((a, b) => {
-      const [startA] = a.split('-');
-      const [startB] = b.split('-');
+      const [startA] = a.split("-");
+      const [startB] = b.split("-");
       return parseTimeToMinutes(startA) - parseTimeToMinutes(startB);
     });
   };
@@ -662,16 +686,20 @@ const CreateTable = () => {
 
   const formatTimeSlot = (timeSlot) => {
     if (!validateTimeSlot(timeSlot)) return null;
-    const [startTime, endTime] = timeSlot.split('-');
+    const [startTime, endTime] = timeSlot.split("-");
     const formatTime = (time) => {
-      const [hours, minutes] = time.split(':');
-      return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
+      const [hours, minutes] = time.split(":");
+      return `${hours.padStart(2, "0")}:${minutes.padStart(2, "0")}`;
     };
     return `${formatTime(startTime)}-${formatTime(endTime)}`;
   };
 
-  const checkTimeSlotOverlap = (newTimeSlot, existingSlots, excludeIndex = -1) => {
-    const [newStart, newEnd] = newTimeSlot.split('-');
+  const checkTimeSlotOverlap = (
+    newTimeSlot,
+    existingSlots,
+    excludeIndex = -1
+  ) => {
+    const [newStart, newEnd] = newTimeSlot.split("-");
     const newStartMinutes = parseTimeToMinutes(newStart);
     const newEndMinutes = parseTimeToMinutes(newEnd);
 
@@ -682,15 +710,17 @@ const CreateTable = () => {
     for (let i = 0; i < existingSlots.length; i++) {
       if (i === excludeIndex) continue;
 
-      const [existingStart, existingEnd] = existingSlots[i].split('-');
+      const [existingStart, existingEnd] = existingSlots[i].split("-");
       const existingStartMinutes = parseTimeToMinutes(existingStart);
       const existingEndMinutes = parseTimeToMinutes(existingEnd);
 
-      const hasOverlap = (
-        (newStartMinutes >= existingStartMinutes && newStartMinutes < existingEndMinutes) ||
-        (newEndMinutes > existingStartMinutes && newEndMinutes <= existingEndMinutes) ||
-        (newStartMinutes <= existingStartMinutes && newEndMinutes >= existingEndMinutes)
-      );
+      const hasOverlap =
+        (newStartMinutes >= existingStartMinutes &&
+          newStartMinutes < existingEndMinutes) ||
+        (newEndMinutes > existingStartMinutes &&
+          newEndMinutes <= existingEndMinutes) ||
+        (newStartMinutes <= existingStartMinutes &&
+          newEndMinutes >= existingEndMinutes);
 
       if (hasOverlap) {
         return {
@@ -711,17 +741,24 @@ const CreateTable = () => {
 
   const handleCellClick = (day, time) => {
     setSelectedCell({ day, time });
-    setDialogData(gridData[`${day}-${time}`] || { subject: "", code: "", faculty: "" });
+    setDialogData(
+      gridData[`${day}-${time}`] || { subject: "", code: "", faculty: "" }
+    );
   };
 
   const romanToInteger = (roman) => {
-    if (typeof roman === 'number' || !isNaN(roman)) {
+    if (typeof roman === "number" || !isNaN(roman)) {
       return parseInt(roman);
     }
 
     const romanMap = {
-      'I': 1, 'V': 5, 'X': 10, 'L': 50,
-      'C': 100, 'D': 500, 'M': 1000
+      I: 1,
+      V: 5,
+      X: 10,
+      L: 50,
+      C: 100,
+      D: 500,
+      M: 1000,
     };
 
     let result = 0;
@@ -742,7 +779,6 @@ const CreateTable = () => {
     return result;
   };
 
-
   const handleSaveEntry = () => {
     if (!selectedCell) return;
 
@@ -757,7 +793,7 @@ const CreateTable = () => {
 
     setGridData(newGridData);
     setSelectedCell(null);
-    setTimetableState(prev => ({
+    setTimetableState((prev) => ({
       ...prev,
       gridData: newGridData
     }));
@@ -768,12 +804,11 @@ const CreateTable = () => {
     const newGridData = { ...gridData };
     delete newGridData[key];
     setGridData(newGridData);
-    setTimetableState(prev => ({
+    setTimetableState((prev) => ({
       ...prev,
       gridData: newGridData
     }));
   };
-
 
   const handleDialogInputChange = (field, value) => {
     if (field === "subject") {
@@ -789,7 +824,11 @@ const CreateTable = () => {
   };
 
   const clearTimetable = () => {
-    if (window.confirm('Are you sure you want to clear the entire timetable? This action cannot be undone.')) {
+    if (
+      window.confirm(
+        "Are you sure you want to clear the entire timetable? This action cannot be undone."
+      )
+    ) {
       const defaultGridData = {};
       const defaultTimeSlots = [...academicData.timeSlots];
 
@@ -807,7 +846,7 @@ const CreateTable = () => {
 
   const handleGenerateTimetable = () => {
     if (allDetailsSelected()) {
-      console.log('Generating timetable with:', batchDetails);
+      console.log("Generating timetable with:", batchDetails);
       debugCurrentState();
       setShowTimetable(true);
       setIsLocked(true);
@@ -841,7 +880,7 @@ const CreateTable = () => {
     setNewTimeSlot("");
     setShowAddTimeSlotDialog(false);
 
-    setTimetableState(prev => ({
+    setTimetableState((prev) => ({
       ...prev,
       timeSlots: sortedTimeSlots
     }));
@@ -850,7 +889,6 @@ const CreateTable = () => {
   const handleDeleteTimeSlot = (index) => {
     const timeSlotToDelete = timeSlots[index];
 
-    // Create new grid data without entries for this time slot
     const newGridData = Object.keys(gridData).reduce((acc, key) => {
       const [day, time] = key.split('-');
       if (time !== timeSlotToDelete) {
@@ -864,7 +902,7 @@ const CreateTable = () => {
     setGridData(newGridData);
     setTimeSlots(newTimeSlots);
 
-    setTimetableState(prev => ({
+    setTimetableState((prev) => ({
       ...prev,
       gridData: newGridData,
       timeSlots: newTimeSlots
@@ -884,17 +922,22 @@ const CreateTable = () => {
 
     const formattedTimeSlot = formatTimeSlot(editingTimeSlot.value.trim());
     if (!formattedTimeSlot) {
-      alert("Please enter a valid time slot format (e.g., 9:00-10:00 or 17:30-18:30)");
+      alert(
+        "Please enter a valid time slot format (e.g., 9:00-10:00 or 17:30-18:30)"
+      );
       return;
     }
 
-    // Check if the new time slot already exists (excluding the current one being edited)
-    if (timeSlots.some((slot, i) => i !== editingTimeSlot.index && slot === formattedTimeSlot)) {
+    if (
+      timeSlots.some(
+        (slot, i) => i !== editingTimeSlot.index && slot === formattedTimeSlot
+      )
+    ) {
       alert("This time slot already exists!");
       return;
     }
 
-    const [newStart, newEnd] = formattedTimeSlot.split('-');
+    const [newStart, newEnd] = formattedTimeSlot.split("-");
     const newStartMin = parseTimeToMinutes(newStart);
     const newEndMin = parseTimeToMinutes(newEnd);
 
@@ -905,23 +948,16 @@ const CreateTable = () => {
 
     const oldTimeSlot = timeSlots[editingTimeSlot.index];
 
-    // Create new time slots array
     let newTimeSlots = [...timeSlots];
 
-    // Update the edited slot
     newTimeSlots[editingTimeSlot.index] = formattedTimeSlot;
 
-    // Filter out any predefined slots that are fully contained within the new slot
-    newTimeSlots = newTimeSlots.filter(slot => {
-      // Keep the slot if:
-      // 1. It's the new slot we just edited
+    newTimeSlots = newTimeSlots.filter((slot) => {
       if (slot === formattedTimeSlot) return true;
 
-      // 2. It's not a predefined slot
       if (!predefinedTimeSlots.includes(slot)) return true;
 
-      // 3. It's a predefined slot but not fully contained in the new slot
-      const [slotStart, slotEnd] = slot.split('-');
+      const [slotStart, slotEnd] = slot.split("-");
       const slotStartMin = parseTimeToMinutes(slotStart);
       const slotEndMin = parseTimeToMinutes(slotEnd);
 
@@ -930,14 +966,12 @@ const CreateTable = () => {
 
     const sortedTimeSlots = sortTimeSlots(newTimeSlots);
 
-    // Update grid data - remove any entries in deleted slots
     const newGridData = {};
-    Object.keys(gridData).forEach(key => {
-      const [day, currentStart, currentEnd] = key.split('-');
+    Object.keys(gridData).forEach((key) => {
+      const [day, currentStart, currentEnd] = key.split("-");
       const currentTimeSlot = `${currentStart}-${currentEnd}`;
 
       if (currentTimeSlot === oldTimeSlot) {
-        // Update the key with new timeslot
         const newKey = `${day}-${newStart}-${newEnd}`;
         newGridData[newKey] = {
           ...gridData[key],
@@ -945,7 +979,6 @@ const CreateTable = () => {
           endTime: newEnd
         };
       } else if (newTimeSlots.includes(currentTimeSlot)) {
-        // Only keep if the timeslot still exists
         newGridData[key] = gridData[key];
       }
     });
@@ -955,17 +988,18 @@ const CreateTable = () => {
     setEditTimeSlotDialog(false);
     setEditingTimeSlot({ index: -1, value: "" });
 
-    setTimetableState(prev => ({
+    setTimetableState((prev) => ({
       ...prev,
       gridData: newGridData,
       timeSlots: sortedTimeSlots,
-      lastSaved: new Date().toISOString()
+      lastSaved: new Date().toISOString(),
     }));
 
-    alert(`Timeslot updated to ${formattedTimeSlot}. Contained predefined timeslots were removed.`);
+    alert(
+      `Timeslot updated to ${formattedTimeSlot}. Contained predefined timeslots were removed.`
+    );
   };
 
-  // Handle course selection change
   const handleCourseChange = (value) => {
     setBatchDetails({
       course: value,
@@ -976,7 +1010,6 @@ const CreateTable = () => {
     setIsLocked(false);
   };
 
-  // Handle semester selection change
   const handleSemesterChange = (value) => {
     setBatchDetails({
       ...batchDetails,
@@ -992,14 +1025,23 @@ const CreateTable = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      {/* Header */}
       {error && (
         <div className="flex justify-center items-center py-8">
           <div className="bg-white rounded-xl shadow-lg p-6 text-center max-w-md mx-4">
             <div className="mb-4">
               <div className="mx-auto w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                <svg
+                  className="w-6 h-6 text-red-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  />
                 </svg>
               </div>
             </div>
@@ -1014,100 +1056,76 @@ const CreateTable = () => {
         </div>
       )}
 
-      {/* Controls */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-          <div className="bg-gradient-to-r from-indigo-600 to-blue-600 px-6 py-4 flex justify-between items-center">
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100">
+          <div className="bg-gradient-to-r from-indigo-600 to-blue-600 px-6 py-4 flex justify-between items-center rounded-t-2xl">
             <div>
-              <h1 className="text-xl font-bold text-white">Timetable Generator</h1>
-              <p className="text-indigo-100 text-sm mt-1">Create and manage your academic schedule</p>
+              <h1 className="text-xl font-bold text-white">
+                Timetable Generator
+              </h1>
+              <p className="text-indigo-100 text-sm mt-1">
+                Create and manage your academic schedule
+              </p>
             </div>
           </div>
 
           <div className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">Course</label>
-                <Select
-                  disabled={isLocked || loading}
+              {/* Added z-index classes to control stacking order */}
+              <div className="space-y-2 z-30">
+                <label className="block text-sm font-semibold text-gray-700">
+                  Course
+                </label>
+                <SearchableSelect
+                  options={courses.map((course) => ({
+                    value: course.Name,
+                    label: `${course.Name} (${course.Code})`,
+                  }))}
                   value={batchDetails.course}
-                  onValueChange={handleCourseChange}
-                >
-                  <SelectTrigger className="w-full h-12 border-2 border-gray-200 rounded-xl hover:border-indigo-300 focus:border-indigo-500 transition-colors">
-                    <SelectValue placeholder="Select course" />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-xl border-2 shadow-lg">
-                    {courses.map((course) => (
-                      <SelectItem key={course.ID} value={course.Name} className="rounded-lg">
-                        <div className="flex flex-col">
-                          <span className="font-medium">{course.Name}</span>
-                          {course.Code && (
-                            <span className="text-xs text-gray-500">{course.Code}</span>
-                          )}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  onSelect={handleCourseChange}
+                  placeholder="Select course"
+                  disabled={isLocked || loading}
+                />
               </div>
 
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">Batch</label>
-                <Select
-                  disabled={isLocked || loading || !batchDetails.course}
+              <div className="space-y-2 z-20">
+                <label className="block text-sm font-semibold text-gray-700">
+                  Batch
+                </label>
+                <SearchableSelect
+                  options={getFilteredBatches().map((batch) => ({
+                    value: `${batch.Year}-${batch.Section}`,
+                    label: `Batch ${batch.Year} - Section ${batch.Section}`,
+                  }))}
                   value={batchDetails.batch}
-                  onValueChange={(value) => {
+                  onSelect={(value) => {
                     setBatchDetails({
                       ...batchDetails,
                       batch: value,
-                      semester: ""
+                      semester: "",
                     });
                     setShowTimetable(false);
                     setIsLocked(false);
                   }}
-                >
-                  <SelectTrigger className="w-full h-12 border-2 border-gray-200 rounded-xl hover:border-indigo-300 focus:border-indigo-500 transition-colors">
-                    <SelectValue placeholder="Select batch" />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-xl border-2 shadow-lg">
-                    {getFilteredBatches().map((batch) => (
-                      <SelectItem
-                        key={batch.ID}
-                        value={`${batch.Year}-${batch.Section}`}
-                        className="rounded-lg"
-                      >
-                        <div className="flex flex-col">
-                          <span className="font-medium">Batch {batch.Year} - Section {batch.Section}</span>
-                          {batch.Course?.Name && (
-                            <span className="text-xs text-gray-500">{batch.Course.Name}</span>
-                          )}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  placeholder="Select batch"
+                  disabled={isLocked || loading || !batchDetails.course}
+                />
               </div>
 
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">Semester</label>
-                <Select
-                  disabled={isLocked || loading || !batchDetails.batch}
+              <div className="space-y-2 z-10">
+                <label className="block text-sm font-semibold text-gray-700">
+                  Semester
+                </label>
+                <SearchableSelect
+                  options={getFilteredSemesters().map((semester) => ({
+                    value: semester.id || semester.number?.toString(),
+                    label: semester.id || semester.number,
+                  }))}
                   value={batchDetails.semester}
-                  onValueChange={handleSemesterChange}
-                >
-                  <SelectTrigger className="w-full h-12 border-2 border-gray-200 rounded-xl hover:border-indigo-300 focus:border-indigo-500 transition-colors">
-                    <SelectValue placeholder="Select semester" />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-xl border-2 shadow-lg">
-                    {getFilteredSemesters().map((semester) => (
-                      <SelectItem key={semester.id} value={semester.id || semester.number?.toString()} className="rounded-lg">
-                        <div className="flex flex-col">
-                          <span className="font-medium">{semester.id || semester.number}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  onSelect={handleSemesterChange}
+                  placeholder="Select semester"
+                  disabled={isLocked || loading || !batchDetails.batch}
+                />
               </div>
             </div>
 
@@ -1120,22 +1138,35 @@ const CreateTable = () => {
                 onClick={handleGenerateTimetable}
                 disabled={!allDetailsSelected() || loading}
               >
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
+                <svg
+                  className="w-5 h-5 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"
+                  />
                 </svg>
-
                 Generate Timetable Grid
               </Button>
             </div>
 
-            {/* Timetable State Info */}
             {showTimetable && timetableState.lastSaved && (
               <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl">
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
                   <p className="text-sm text-blue-800">
-                    <span className="font-semibold">Status:</span> {timetableState.isExisting ? 'Existing timetable loaded' : 'New timetable'} |
-                    <span className="font-semibold"> Last saved:</span> {new Date(timetableState.lastSaved).toLocaleString()}
+                    <span className="font-semibold">Status:</span>{" "}
+                    {timetableState.isExisting
+                      ? "Existing timetable loaded"
+                      : "New timetable"}{" "}
+                    |
+                    <span className="font-semibold"> Last saved:</span>{" "}
+                    {new Date(timetableState.lastSaved).toLocaleString()}
                   </p>
                 </div>
               </div>
@@ -1144,27 +1175,30 @@ const CreateTable = () => {
         </div>
       </div>
 
-      {/* Loading/Error States */}
       {(loading || isLoading) && (
         <div className="flex justify-center items-center py-8">
           <div className="bg-white rounded-xl shadow-lg p-6 flex items-center space-x-4">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600"></div>
             <p className="text-gray-700 font-medium">
-              {loading ? 'Loading data...' : 'Loading timetable...'}
+              {loading ? "Loading data..." : "Loading timetable..."}
             </p>
           </div>
         </div>
       )}
 
-      {/* Timetable Grid */}
       {showTimetable && allDetailsSelected() && (
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 pb-8">
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+          {/* I have removed the 'overflow-hidden' class from this div as well */}
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100">
             <div className="bg-gradient-to-r from-indigo-600 to-blue-600 px-6 py-4">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                  <h2 className="text-xl font-bold text-white">Timetable Grid</h2>
-                  <p className="text-indigo-100 text-sm">Manage your class schedule</p>
+                  <h2 className="text-xl font-bold text-white">
+                    Timetable Grid
+                  </h2>
+                  <p className="text-indigo-100 text-sm">
+                    Manage your class schedule
+                  </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <Button
@@ -1186,7 +1220,9 @@ const CreateTable = () => {
                       <Save size={16} />
                     )}
                     <span className="hidden sm:inline">
-                      {timetableState.isExisting ? 'Update Timetable' : 'Save Timetable'}
+                      {timetableState.isExisting
+                        ? "Update Timetable"
+                        : "Save Timetable"}
                     </span>
                     <span className="sm:hidden">Save</span>
                   </Button>
@@ -1195,7 +1231,6 @@ const CreateTable = () => {
                     onClick={refresh}
                     disabled={isSaving}
                   >
-
                     <RefreshCw size={18} />
                     <span className="hidden sm:inline">ReFresh</span>
                     <span className="sm:hidden "></span>
@@ -1212,12 +1247,13 @@ const CreateTable = () => {
               </div>
             </div>
 
-            {/* Mobile Timetable View */}
             <div className="lg:hidden">
               <div className="p-4 space-y-4">
                 {days.map((day) => (
                   <div key={day} className="bg-gray-50 rounded-xl p-4">
-                    <h3 className="font-bold text-indigo-700 mb-3 text-lg">{day}</h3>
+                    <h3 className="font-bold text-indigo-700 mb-3 text-lg">
+                      {day}
+                    </h3>
                     <div className="space-y-2">
                       {timeSlots.map((time) => {
                         const cellData = gridData[`${day}-${time}`];
@@ -1229,7 +1265,9 @@ const CreateTable = () => {
                           >
                             <div className="flex justify-between items-start">
                               <div className="flex-1">
-                                <div className="text-sm font-semibold text-gray-600 mb-1">{time}</div>
+                                <div className="text-sm font-semibold text-gray-600 mb-1">
+                                  {time}
+                                </div>
                                 {cellData ? (
                                   <div>
                                     <div className="font-semibold text-indigo-700 text-sm mb-1">
@@ -1243,7 +1281,9 @@ const CreateTable = () => {
                                     </div>
                                   </div>
                                 ) : (
-                                  <div className="text-gray-400 text-sm">Tap to add class</div>
+                                  <div className="text-gray-400 text-sm">
+                                    Tap to add class
+                                  </div>
                                 )}
                               </div>
                               <div className="flex gap-1 ml-2">
@@ -1260,7 +1300,9 @@ const CreateTable = () => {
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    handleDeleteTimeSlot(timeSlots.indexOf(time));
+                                    handleDeleteTimeSlot(
+                                      timeSlots.indexOf(time)
+                                    );
                                   }}
                                   className="text-red-600 hover:text-red-800 p-1 rounded"
                                   title="Delete time slot"
@@ -1278,7 +1320,6 @@ const CreateTable = () => {
               </div>
             </div>
 
-            {/* Desktop Timetable Table */}
             <div className="hidden lg:block p-6">
               <div className="overflow-x-auto rounded-xl border-2 border-gray-200">
                 <table className="w-full border-collapse">
@@ -1317,10 +1358,17 @@ const CreateTable = () => {
                   </thead>
                   <tbody>
                     {days.map((day, dayIndex) => {
-                      const groupedLectures = groupConsecutiveTimeSlots(gridData, [day], timeSlots);
+                      const groupedLectures = groupConsecutiveTimeSlots(
+                        gridData,
+                        [day],
+                        timeSlots
+                      );
 
                       return (
-                        <tr key={day} className={dayIndex % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                        <tr
+                          key={day}
+                          className={dayIndex % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                        >
                           <td className="border-r border-gray-200 p-4 font-bold text-indigo-700 bg-gradient-to-r from-indigo-50 to-blue-50 text-center">
                             {day}
                           </td>
@@ -1329,12 +1377,13 @@ const CreateTable = () => {
                             const lecture = gridData[cellKey];
                             const groupedLecture = groupedLectures[cellKey];
 
-                            // Skip rendering if this is part of a group but not the first in the group
-                            if (groupedLecture?.isGrouped && groupedLecture.timeSlots[0] !== time) {
+                            if (
+                              groupedLecture?.isGrouped &&
+                              groupedLecture.timeSlots[0] !== time
+                            ) {
                               return null;
                             }
 
-                            // Calculate colSpan for grouped lectures
                             const colSpan = groupedLecture?.isGrouped
                               ? groupedLecture.timeSlots.length
                               : 1;
@@ -1342,7 +1391,8 @@ const CreateTable = () => {
                             return (
                               <td
                                 key={cellKey}
-                                className={`border-r border-gray-200 p-3 text-center cursor-pointer hover:bg-indigo-50 transition-colors duration-200 h-24 ${colSpan > 1 ? 'bg-blue-50' : ''}`}
+                                className={`border-r border-gray-200 p-3 text-center cursor-pointer hover:bg-indigo-50 transition-colors duration-200 h-24 ${colSpan > 1 ? "bg-blue-50" : ""
+                                  }`}
                                 onClick={() => handleCellClick(day, time)}
                                 colSpan={colSpan}
                               >
@@ -1359,7 +1409,12 @@ const CreateTable = () => {
                                     </div>
                                     {colSpan > 1 && (
                                       <div className="text-xs text-gray-400 mt-1">
-                                        {time.split('-')[0]} to {groupedLecture.timeSlots[groupedLecture.timeSlots.length - 1].split('-')[1]}
+                                        {time.split("-")[0]} to{" "}
+                                        {
+                                          groupedLecture.timeSlots[
+                                            groupedLecture.timeSlots.length - 1
+                                          ].split("-")[1]
+                                        }
                                       </div>
                                     )}
                                   </div>
@@ -1382,8 +1437,10 @@ const CreateTable = () => {
         </div>
       )}
 
-      {/* Dialog for adding/editing entries */}
-      <Dialog open={selectedCell !== null} onOpenChange={() => setSelectedCell(null)}>
+      <Dialog
+        open={selectedCell !== null}
+        onOpenChange={() => setSelectedCell(null)}
+      >
         <DialogContent className="sm:max-w-md mx-4 rounded-2xl">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-indigo-700">
@@ -1394,29 +1451,24 @@ const CreateTable = () => {
           </DialogHeader>
           <div className="space-y-6">
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-700">Subject</label>
-              <Select
+              <label className="block text-sm font-semibold text-gray-700">
+                Subject
+              </label>
+              <SearchableSelect
+                options={subjects.map((subject) => ({
+                  value: subject.Name,
+                  label: `${subject.Name} (${subject.Code})`,
+                }))}
                 value={dialogData.subject}
-                onValueChange={(value) => handleDialogInputChange("subject", value)}
-              >
-                <SelectTrigger className="w-full h-12 border-2 border-gray-200 rounded-xl hover:border-indigo-300 focus:border-indigo-500 transition-colors">
-                  <SelectValue placeholder="Select subject" />
-                </SelectTrigger>
-                <SelectContent className="rounded-xl border-2 shadow-lg">
-                  {subjects.map((subject) => (
-                    <SelectItem key={subject.ID} value={subject.Name} className="rounded-lg">
-                      <div className="flex flex-col">
-                        <span className="font-medium">{subject.Name}</span>
-                        <span className="text-xs text-gray-500">{subject.Code}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onSelect={(value) => handleDialogInputChange("subject", value)}
+                placeholder="Select subject"
+              />
             </div>
 
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-700">Subject Code</label>
+              <label className="block text-sm font-semibold text-gray-700">
+                Subject Code
+              </label>
               <Input
                 value={dialogData.code}
                 onChange={(e) => handleDialogInputChange("code", e.target.value)}
@@ -1427,46 +1479,41 @@ const CreateTable = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-700">Faculty</label>
-              <Select
+              <label className="block text-sm font-semibold text-gray-700">
+                Faculty
+              </label>
+              <SearchableSelect
+                options={faculties.map((faculty) => ({
+                  value: faculty.Name,
+                  label: faculty.Name,
+                }))}
                 value={dialogData.faculty}
-                onValueChange={(value) => handleDialogInputChange("faculty", value)}
-              >
-                <SelectTrigger className="w-full h-12 border-2 border-gray-200 rounded-xl hover:border-indigo-300 focus:border-indigo-500 transition-colors">
-                  <SelectValue placeholder="Select faculty" />
-                </SelectTrigger>
-                <SelectContent className="rounded-xl border-2 shadow-lg">
-                  {faculties.map((faculty) => (
-                    <SelectItem key={faculty.ID} value={faculty.Name} className="rounded-lg">
-                      <div className="flex flex-col">
-                        <span className="font-medium">{faculty.Name}</span>
-                        {faculty.Email && (
-                          <span className="text-xs text-gray-500">{faculty.Email}</span>
-                        )}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onSelect={(value) => handleDialogInputChange("faculty", value)}
+                placeholder="Select faculty"
+              />
             </div>
           </div>
 
           <DialogFooter className="flex flex-col sm:flex-row gap-2 mt-6">
-            {selectedCell && gridData[`${selectedCell.day}-${selectedCell.time}`] && (
-              <Button
-                variant="destructive"
-                onClick={() => {
-                  handleClearCell(selectedCell.day, selectedCell.time);
-                  setSelectedCell(null);
-                }}
-                className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium"
-              >
-                Clear Entry
-              </Button>
-            )}
+            {selectedCell &&
+              gridData[`${selectedCell.day}-${selectedCell.time}`] && (
+                <Button
+                  variant="destructive"
+                  onClick={() => {
+                    handleClearCell(selectedCell.day, selectedCell.time);
+                    setSelectedCell(null);
+                  }}
+                  className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium"
+                >
+                  Clear Entry
+                </Button>
+              )}
             <div className="flex gap-2 flex-1">
               <DialogClose asChild>
-                <Button variant="outline" className="flex-1 rounded-xl border-2 hover:bg-gray-50">
+                <Button
+                  variant="outline"
+                  className="flex-1 rounded-xl border-2 hover:bg-gray-50"
+                >
                   Cancel
                 </Button>
               </DialogClose>
@@ -1482,11 +1529,12 @@ const CreateTable = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Edit Time Slot Dialog */}
       <Dialog open={editTimeSlotDialog} onOpenChange={setEditTimeSlotDialog}>
         <DialogContent className="sm:max-w-md mx-4 rounded-2xl">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-indigo-700">Edit Time Slot</DialogTitle>
+            <DialogTitle className="text-xl font-bold text-indigo-700">
+              Edit Time Slot
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -1495,7 +1543,12 @@ const CreateTable = () => {
               </label>
               <Input
                 value={editingTimeSlot.value}
-                onChange={(e) => setEditingTimeSlot(prev => ({ ...prev, value: e.target.value }))}
+                onChange={(e) =>
+                  setEditingTimeSlot((prev) => ({
+                    ...prev,
+                    value: e.target.value,
+                  }))
+                }
                 placeholder="e.g., 9:00-10:00 or 17:30-18:30"
                 className="h-12 border-2 border-gray-200 rounded-xl hover:border-indigo-300 focus:border-indigo-500 transition-colors"
               />
@@ -1528,11 +1581,15 @@ const CreateTable = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Add Time Slot Dialog */}
-      <Dialog open={showAddTimeSlotDialog} onOpenChange={setShowAddTimeSlotDialog}>
+      <Dialog
+        open={showAddTimeSlotDialog}
+        onOpenChange={setShowAddTimeSlotDialog}
+      >
         <DialogContent className="sm:max-w-md mx-4 rounded-2xl">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-indigo-700">Add New Time Slot</DialogTitle>
+            <DialogTitle className="text-xl font-bold text-indigo-700">
+              Add New Time Slot
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -1552,7 +1609,10 @@ const CreateTable = () => {
           </div>
           <DialogFooter className="flex gap-2 mt-6">
             <DialogClose asChild>
-              <Button variant="outline" className="flex-1 rounded-xl border-2 hover:bg-gray-50">
+              <Button
+                variant="outline"
+                className="flex-1 rounded-xl border-2 hover:bg-gray-50"
+              >
                 Cancel
               </Button>
             </DialogClose>
@@ -1568,6 +1628,6 @@ const CreateTable = () => {
       </Dialog>
     </div>
   );
-}
+};
 
-export default CreateTable
+export default CreateTable;

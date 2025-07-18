@@ -14,6 +14,7 @@ import {
 import { useUserRole } from "../context/UserRoleContext";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import SearchableSelect from "../components/SearchableSelect";
 const toastCustomStyles = `
   @media (max-width: 480px) {
     .Toastify__toast {
@@ -214,8 +215,7 @@ const ManageBatches = () => {
       {
         autoClose: false,
         closeButton: false,
-        position:  'top-right',
-        // className: 'mt-4 my-2 sm:mt-2 mx-2', // Responsive margins
+        position:'top-right',
       }
     );
   };
@@ -238,7 +238,7 @@ const ManageBatches = () => {
 
       setBatches(batches.filter((batch) => batch.id !== id));
       setFilteredBatches(filteredBatches.filter((batch) => batch.id !== id));
-       toast.success('Batch deleted successfully!');
+      toast.success('Batch deleted successfully!');
     } catch (err) {
       console.error("Error deleting batch:", err);
       toast.error(`Failed to delete batch: ${err.message}`);
@@ -306,7 +306,7 @@ const ManageBatches = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-       <style dangerouslySetInnerHTML={{ __html: toastCustomStyles }} />
+      <style dangerouslySetInnerHTML={{ __html: toastCustomStyles }} />
       <ToastContainer
         position="top-right"
         autoClose={3000}
@@ -316,22 +316,16 @@ const ManageBatches = () => {
         pauseOnFocusLoss
         draggable
         pauseOnHover
-    />
+      />
       {/* Header Section */}
       <div className="px-4 sm:px-6 lg:px-8 pt-6 pb-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <Heading text={userRole === "admin" ? "Manage Batches" : "View Batches"} />
-      <p className="text-slate-600 mt-2 text-sm sm:text-base">
-        {userRole === "admin" ? "Add, edit, and manage course batches" : "View course batches"}
-      </p>
+            <p className="text-slate-600 mt-2 text-sm sm:text-base">
+              {userRole === "admin" ? "Add, edit, and manage course batches" : "View course batches"}
+            </p>
           </div>
-          {/* <button
-            onClick={() => navigate("/dashboard")}
-            className="bg-slate-600 hover:bg-slate-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 text-sm font-medium"
-          >
-            Back to Dashboard
-          </button> */}
         </div>
       </div>
 
@@ -355,28 +349,28 @@ const ManageBatches = () => {
             </div>
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
               {userRole === 'admin' && (
-              <div className="relative w-full sm:w-64">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FaSearch className="text-gray-400" />
+                <div className="relative w-full sm:w-64">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <FaSearch className="text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Search batches..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                  />
                 </div>
-                <input
-                  type="text"
-                  placeholder="Search batches..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                />
-              </div>
               )}
-               {userRole === "admin" && (
-              <button
-                className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-4 py-2.5 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 shadow-sm font-medium"
-                onClick={handleAddNewBatch}
-              >
-                <FaPlus className="text-sm" />
-                <span>Add Batch</span>
-              </button>
-               )}
+              {userRole === "admin" && (
+                <button
+                  className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-4 py-2.5 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 shadow-sm font-medium"
+                  onClick={handleAddNewBatch}
+                >
+                  <FaPlus className="text-sm" />
+                  <span>Add Batch</span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -498,7 +492,7 @@ const ManageBatches = () => {
       {/* Add/Edit Batch Dialog */}
       {showAddDialog && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh]">
             <div className="sticky top-0 bg-white flex items-center justify-between p-6 border-b border-slate-200 rounded-t-xl">
               <h3 className="text-lg font-semibold text-slate-800">
                 {newBatch.id ? "Edit Batch" : "Add New Batch"}
@@ -567,25 +561,22 @@ const ManageBatches = () => {
                 >
                   Course *
                 </label>
-                <select
+                <SearchableSelect
                   id="course_id"
+                  options={courses.map((course) => ({
+                    value: course.ID,
+                    label: `${course.Code} - ${course.Name}`,
+                  }))}
                   value={newBatch.course_id}
-                  onChange={(e) =>
+                  onSelect={(value) =>
                     setNewBatch((prev) => ({
                       ...prev,
-                      course_id: e.target.value,
+                      course_id: value,
                     }))
                   }
+                  placeholder="Select a course"
                   disabled={addingBatch || courses.length === 0}
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 disabled:bg-slate-100 disabled:cursor-not-allowed"
-                >
-                  <option value="">Select a course</option>
-                  {courses.map((course) => (
-                    <option key={course.ID} value={course.ID}>
-                      {course.Code} - {course.Name}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
 
               {/* Action Buttons */}
