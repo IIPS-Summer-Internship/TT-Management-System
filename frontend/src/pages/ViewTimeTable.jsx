@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { FaEdit } from "react-icons/fa";
+import SearchableSelect from "../components/SearchableSelect";
 import {
   ChevronLeft,
   ChevronRight,
@@ -9,7 +10,6 @@ import {
   AlertTriangle,
   Users,
   BookOpen,
-  ArrowLeft,
   Clock,
   MapPin,
 } from "lucide-react";
@@ -133,19 +133,6 @@ const StatusModal = React.memo(({ lecture, onClose, onUpdate }) => {
   );
 });
 
-const FilterSelect = React.memo(({ label, value, options, onChange }) => (
-  <div className="flex flex-col">
-    <label className="text-sm font-semibold text-gray-600 mb-1">{label}</label>
-    <select
-      value={value}
-      onChange={onChange}
-      className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 bg-white shadow-sm min-w-[180px]"
-    >
-      {options}
-    </select>
-  </div>
-));
-
 function ViewTimeTable() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
@@ -206,7 +193,7 @@ function ViewTimeTable() {
         await Promise.all([
           fetchCourses(),
           fetchFaculties(),
-           fetchRooms(),
+          fetchRooms(),
           fetchLectures(),
         ]);
       } catch (err) {
@@ -571,6 +558,16 @@ function ViewTimeTable() {
   const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+  const courseOptions = [
+    { value: "all", label: "" },
+    ...memoizedCourses.map(c => ({ value: c.ID, label: c.Name }))
+  ];
+
+  const facultyOptions = [
+    { value: "all", label: "" },
+    ...memoizedFaculties.map(f => ({ value: f.ID, label: f.Name }))
+  ];
+
   if (initialLoading) {
     return (
       <div className="min-h-screen flex flex-col justify-center items-center bg-gray-100">
@@ -607,74 +604,57 @@ function ViewTimeTable() {
       <div className="max-w-7xl mx-auto">
         <div className="bg-white/70 backdrop-blur-lg rounded-2xl shadow-lg p-6">
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8">
-            {/* <button
-              onClick={() => window.history.back()}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-lg hover:from-indigo-700 hover:to-blue-700 transition-all duration-200 shadow-md hover:shadow-lg"
-              title="Back to Dashboard"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span className="text-sm font-medium">Back</span>
-            </button> */}
-
             <h1 className="text-3xl sm:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-800 flex items-center gap-2 sm:gap-3">
               Attendance Calendar
             </h1>
 
             <div className="flex flex-col sm:flex-row flex-wrap gap-4">
-              <FilterSelect
-                label="Course"
-                value={selectedCourse}
-                onChange={(e) => handleFilterChange('course', e.target.value)}
-                options={
-                  <>
-                    <option value="all">All Courses</option>
-                    {memoizedCourses.map(c => (
-                      <option key={c.ID} value={c.ID}>{c.Name}</option>
-                    ))}
-                  </>
-                }
-              />
+              <div className="flex flex-col min-w-[180px]">
+                <label className="text-sm font-semibold text-gray-600 mb-1">Course</label>
+                <SearchableSelect
+                  options={courseOptions}
+                  onSelect={(value) => handleFilterChange('course', value)}
+                  placeholder="Select Course"
+                  value={selectedCourse}
+                />
+              </div>
 
-              <FilterSelect
-                label="Faculty"
-                value={selectedFaculty}
-                onChange={(e) => handleFilterChange('faculty', e.target.value)}
-                options={
-                  <>
-                    <option value="all">All Faculties</option>
-                    {memoizedFaculties.map(f => (
-                      <option key={f.ID} value={f.ID}>{f.Name}</option>
-                    ))}
-                  </>
-                }
-              />
+              <div className="flex flex-col min-w-[180px]">
+                <label className="text-sm font-semibold text-gray-600 mb-1">Faculty</label>
+                <SearchableSelect
+                  options={facultyOptions}
+                  onSelect={(value) => handleFilterChange('faculty', value)}
+                  placeholder="Select Faculty"
+                  value={selectedFaculty}
+                />
+              </div>
 
-              <FilterSelect
-                label="Semester"
-                value={selectedSemester}
-                onChange={(e) => handleFilterChange('semester', e.target.value)}
-                options={
-                  <>
-                    <option value="all">All Semesters</option>
-                    {memoizedSemesters.map(s => (
-                      <option key={s.ID} value={s.ID}>{getSemesterDisplayName(s.Name)}</option>
-                    ))}
-                  </>
-                }
-              />
-               <FilterSelect
-                label="Room"
-                value={selectedRoom}
-                onChange={(e) => handleFilterChange('room', e.target.value)}
-                options={
-                  <>
-                    <option value="all">All Rooms</option>
-                    {memoizedRooms.map(r => (
-                      <option key={r.ID} value={r.ID}>{r.Name || `Room ${r.ID}`}</option>
-                    ))}
-                  </>
-                }
-              />
+              <div className="flex flex-col">
+                <label className="text-sm font-semibold text-gray-600 mb-1">Semester</label>
+                <select
+                  value={selectedSemester}
+                  onChange={(e) => handleFilterChange('semester', e.target.value)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 bg-white shadow-sm min-w-[180px]"
+                >
+                  <option value="all">All Semesters</option>
+                  {memoizedSemesters.map(s => (
+                    <option key={s.ID} value={s.ID}>{getSemesterDisplayName(s.Name)}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex flex-col">
+                <label className="text-sm font-semibold text-gray-600 mb-1">Room</label>
+                <select
+                  value={selectedRoom}
+                  onChange={(e) => handleFilterChange('room', e.target.value)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 bg-white shadow-sm min-w-[180px]"
+                >
+                  <option value="all">All Rooms</option>
+                  {memoizedRooms.map(r => (
+                    <option key={r.ID} value={r.ID}>{r.Name || `Room ${r.ID}`}</option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
 
