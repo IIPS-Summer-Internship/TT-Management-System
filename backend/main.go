@@ -2,12 +2,13 @@ package main
 
 import (
 	"flag"
-	"github.com/gin-gonic/gin"
 	"log"
 	"os"
 	"tms-server/config"
 	"tms-server/migrations"
 	"tms-server/routes"
+
+	"github.com/gin-gonic/gin"
 )
 
 func init() {
