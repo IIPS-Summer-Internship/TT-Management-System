@@ -3,10 +3,12 @@ package models
 import "time"
 
 type Session struct {
-	ID        uint      `gorm:"primaryKey"`
-	LectureID uint      `gorm:"not null"`
-	Date      time.Time `gorm:"type:date;not null"` // Stores only date (YYYY-MM-DD)
-	Status    string
+    SessionID   uint `gorm:"primaryKey"`
+    TimetableID uint	`gorm:"not null"`
+    TimeslotID  uint	`gorm:"not null"`
+    Date        time.Time  `gorm:"type:date;not null"`
+    Status      string 	`gorm:"not null"`
 
-	Lecture Lecture `gorm:"foreignKey:LectureID"`
+    Timetable Timetable	`gorm:"foreignKey:TimetableID;references:TimetableID"`
+    Timeslot  Timeslot	`gorm:"foreignKey:TimeslotID;references:TimeslotID"`
 }

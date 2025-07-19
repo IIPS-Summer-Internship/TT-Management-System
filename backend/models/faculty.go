@@ -1,9 +1,10 @@
 package models
 
 type Faculty struct {
-	ID       uint      `gorm:"primaryKey"`
-	Name     string    `gorm:"not null"`
-	UserID   *uint     `gorm:"default:null"`
-	User     User      `gorm:"foreignKey:UserID"`
-	Subjects []Subject `gorm:"many2many:faculty_subjects;"`
+    FacultyID uint `gorm:"primaryKey"`
+    UserID    uint `gorm:"unique;not null"`
+    Name      string `gorm:"not null"`
+
+    User User `gorm:"foreignKey:UserID;references:UserID"`
 }
+
